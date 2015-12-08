@@ -14,7 +14,7 @@
 
 exec=/usr/local/bin/galera-ha
 pidfile=/var/run/galera-ha.pid
-NAME=galera-ha
+service=galera-ha
 USER=root
 
 test -x $DAEMON || exit 0
@@ -177,7 +177,7 @@ case "$1" in
        do_start
         ;;
    *)
-        echo "Usage: $NAME {start|stop|restart}" >&2
+        echo "Usage: $service {start|stop|restart}" >&2
         exit 3
         ;;
 esac
