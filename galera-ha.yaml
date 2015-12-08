@@ -1,0 +1,16 @@
+---
+#
+# /etc/galera-ha.yaml
+#
+# monitored Galera host credentials
+client:
+  host: localhost
+  port: 3306
+  user: monitoring
+  pass: pasword
+# galera-ha server configuration
+server:
+  query_timeout : 0.5
+  host: 0.0.0.0
+  port: 3336
+  logfile: '/var/log/galera-ha.log'

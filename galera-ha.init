@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# chkconfig: 345 90 90
+# description:  HAProxy L7 check for Galera Synced state
+
+### BEGIN INIT INFO
+# Provides:          galera-ha
+# Required-Start:    $local_fs $remote_fs $network $syslog $named
+# Required-Stop:     $local_fs $remote_fs $network $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       HAProxy L7 check for Galera Synced state
+### END INIT INFO
+
+PATH=/usr/local/bin/
+DAEMON=/usr/local/bin/galera-ha
+PID=/var/run/galera-ha.pid
+NAME=galera-ha
+DESC=galera-ha
+
+test -x $DAEMON || exit 0
+    . /etc/init.d/functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+    # Return
+    #   0 if daemon has been started
+    #   1 if daemon was already running
+    #   2 if daemon could not be started
+    daemon --pidfile $PID "$DAEMON"
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+    # Return
+    #   0 if daemon has been stopped
+    #   1 if daemon was already stopped
+    #   2 if daemon could not be stopped
+    #   other if a failure occurred
+    #start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PID --name $NAME
+    
+    killproc -p $PID $NAME
+    RETVAL="$?"
+
+    sleep 1
+    return "$RETVAL"
+}
+
+log_daemon_msg() {
+        echo -n $"$1"
+}
+
+case "$1" in
+    start)
+        [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+        do_start
+        case "$?" in
+            0|1) [ "$VERBOSE" != no ] && log_daemon_msg "Success" ;;
+            2) [ "$VERBOSE" != no ] && log_daemon_msg "Fail" ;;
+        esac
+        ;;
+    stop)
+        [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+        do_stop
+        case "$?" in
+            0) [ "$VERBOSE" != no ] && log_daemon_msg "Success" ;;
+            *) [ "$VERBOSE" != no ] && log_daemon_msg "Fail" ;;
+        esac
+        ;;
+    restart)
+        log_daemon_msg "Restarting $DESC" "$NAME"
+
+        do_stop
+        case "$?" in
+            0|1)
+                do_start
+                case "$?" in
+                    0) log_end_msg 0 ;;
+                    1) log_end_msg 1 ;; # Old process is still running
+                    *) log_end_msg 1 ;; # Failed to start
+                esac
+                ;;
+            *)
+                # Failed to stop
+                log_end_msg 1
+                ;;
+        esac
+        ;;
+   *)
+        echo "Usage: $NAME {start|stop|restart}" >&2
+        exit 3
+        ;;
+esac
+
+:

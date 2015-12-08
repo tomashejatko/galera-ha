@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+
+#
+# MySQL health check micro HTTP server
+#
+#
+require 'rubygems' if RUBY_VERSION < '1.9.0'
+require 'thin'
+require 'mysql2'
+require 'timeout'
+require 'yaml'
+
+class SimpleAdapter
+
+  $config = YAML::load( File.open  '/etc/galera-ha.yaml' )
+
+  def mysql_connect
+
+    Timeout::timeout($config["server"]["query_timeout"]) do
+    begin
+          mysql = Mysql2::Client.new(
+          :host => $config["client"]["host"],
+          :port => $config["client"]["host"],
+          :username => $config["client"]["user"],
+          :password => $config["client"]["pass"]
+        )
+      wsrep_state = mysql.query("SHOW GLOBAL STATUS LIKE 'wsrep_local_state_comment'")
+    rescue => e
+      puts e.message
+    end 
+    @synced = wsrep_state.first['Value']
+  end
+  rescue Timeout::Error
+    @synced = 'none'
+  end
+
+
+  def call(env)
+    $0 = "/usr/local/bin/galera-ha"
+    mysql_connect
+    body = [""]
+    if @synced == 'Synced'
+     [
+      200,
+      { 'Content-Type' => 'text/plain' },
+      body
+    ]
+    else
+     [
+     504,
+      { 'Content-Type' => 'text/plain' },
+      body
+    ]
+    end 
+  end
+end
+
+server = Thin::Server.new($config["server"]["host"], $config["server"]["port"]) do
+  use Rack::CommonLogger
+  map '/galera-state' do
+    run SimpleAdapter.new
+  end
+end
+server.log_file = '/var/log/galera-ha.log'
+server.pid_file = '/var/run/galera-ha.pid'
+server.daemonize
+server.start
