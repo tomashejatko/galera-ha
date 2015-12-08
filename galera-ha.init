@@ -12,85 +12,169 @@
 # Description:       HAProxy L7 check for Galera Synced state
 ### END INIT INFO
 
-PATH=/usr/local/bin/
-DAEMON=/usr/local/bin/galera-ha
-PID=/var/run/galera-ha.pid
+exec=/usr/local/bin/galera-ha
+pidfile=/var/run/galera-ha.pid
 NAME=galera-ha
-DESC=galera-ha
+USER=root
 
 test -x $DAEMON || exit 0
-    . /etc/init.d/functions
 
-#
-# Function that starts the daemon/service
-#
-do_start()
-{
-    # Return
-    #   0 if daemon has been started
-    #   1 if daemon was already running
-    #   2 if daemon could not be started
-    daemon --pidfile $PID "$DAEMON"
+system=unknown
+if [ -f /etc/redhat-release ]; then
+    system=redhat
+elif [ -f /etc/system-release ]; then
+    system=redhat
+elif [ -f /etc/debian_version ]; then
+    system=debian
+elif [ -f /etc/SuSE-release ]; then
+    system=suse
+elif [ -f /etc/gentoo-release ]; then
+    system=gentoo
+elif [ -f /etc/arch-release ]; then
+    system=arch
+elif [ -f /etc/slackware-version ]; then
+    system=slackware
+elif [ -f /etc/lfs-release ]; then
+    system=lfs
+fi
+
+##
+## Set platform specific bits here.
+## The original platform for this script was redhat so the scripts are partial
+## to redhat style. Eventually we may want to be more LSB compliant
+## such as what Debian platforms already implement instead.
+##
+## Each platform must implement at least the following functions:
+##
+##     start_daemon $user $pidfile $executable "arguments"
+##     killproc -p $pid $service
+##     log_daemon_msg $@
+##     log_action_msg $@
+##     log_success_msg $@
+##     log_failure_msg $@
+##     echo_ok
+##     echo_fail
+##
+if [ "$system" = "redhat" ]; then
+    ## source platform specific external scripts
+    . /etc/init.d/functions
+    [ -r /etc/sysconfig/$service ] && . /etc/sysconfig/$service
+
+    ## set or override platform specific variables
+    lockfile=${LOCKFILE-/var/lock/subsys/$service}
+
+    ## set or override platform specific functions
+    start_daemon() {
+        daemon --user $1 --pidfile $2 "$3 $4"
+    }   
+    log_daemon_msg() {
+        echo -n $"$1"
+    }   
+    echo_ok() {
+        echo_success; echo
+    }   
+    echo_fail() {
+        echo_failure; echo
+    }   
+    log_success_msg() {
+        success $"$@"
+    }   
+    log_failure_msg() {
+        failure $"$@"
+        echo $"$@"
+    }   
+    log_action_msg() {
+        echo $@
+    }
+fi
+if [ "$system" = "debian" ]; then
+    ## source platform specific external scripts
+    . /lib/lsb/init-functions
+    [ -r /etc/default/$service ] && . /etc/default/$service
+
+    ## set or override platform specific variables
+    lockfile=${LOCKFILE-/var/lock/$service}
+
+    ## set or override platform specific functions
+    start_daemon() {
+        start-stop-daemon --start --chuid $1 --pidfile $2 --exec $3 -- $4
+    }
+    echo_ok() {
+        log_end_msg 0
+    }
+    echo_fail() {
+        log_end_msg 1
+    }
+fi
+
+options=""
+do_start() {
+    log_daemon_msg "Starting $service"
+
+    [ -x $exec ] || exit 5
+
+    start_daemon $USER $pidfile $exec "$options"
+    retval=$?
+    sleep 1
+
+    if [ $retval -ne 0 ]; then
+        echo_fail
+        exit 1
+    fi
+
+    if [ $retval -eq 0 ]; then
+        echo_ok
+    fi
+
+    return $retval
 }
 
 #
 # Function that stops the daemon/service
 #
-do_stop()
-{
-    # Return
-    #   0 if daemon has been stopped
-    #   1 if daemon was already stopped
-    #   2 if daemon could not be stopped
-    #   other if a failure occurred
-    #start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PID --name $NAME
-    
-    killproc -p $PID $NAME
-    RETVAL="$?"
+do_stop() {
+   log_daemon_msg "Stopping $service"
 
-    sleep 1
-    return "$RETVAL"
-}
-
-log_daemon_msg() {
-        echo -n $"$1"
+    if [ -f $pidfile ]; then
+        killproc -p $pidfile $service
+        retval=$?
+        if [ $retval -eq 0 ]; then
+            rm -f $pidfile
+            echo_ok
+        else
+            echo_fail
+        fi
+        sleep 1
+        return $retval
+    else
+        pid=$(pgrep -P1 -fl $exec | grep -v grep | grep -v bash | cut -f1 -d" ")
+        if [ ! "$pid" == "" ]; then
+            kill $pid
+            retval=$?
+            if [ $retval -eq 0 ]; then
+                rm -f $pidfile
+                echo_ok
+            else
+                echo_fail
+            fi
+            sleep 1
+            return $retval
+        else
+            echo_fail
+        fi
+    fi
 }
 
 case "$1" in
     start)
-        [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
         do_start
-        case "$?" in
-            0|1) [ "$VERBOSE" != no ] && log_daemon_msg "Success" ;;
-            2) [ "$VERBOSE" != no ] && log_daemon_msg "Fail" ;;
-        esac
         ;;
     stop)
-        [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
         do_stop
-        case "$?" in
-            0) [ "$VERBOSE" != no ] && log_daemon_msg "Success" ;;
-            *) [ "$VERBOSE" != no ] && log_daemon_msg "Fail" ;;
-        esac
         ;;
     restart)
-        log_daemon_msg "Restarting $DESC" "$NAME"
-
-        do_stop
-        case "$?" in
-            0|1)
-                do_start
-                case "$?" in
-                    0) log_end_msg 0 ;;
-                    1) log_end_msg 1 ;; # Old process is still running
-                    *) log_end_msg 1 ;; # Failed to start
-                esac
-                ;;
-            *)
-                # Failed to stop
-                log_end_msg 1
-                ;;
-        esac
+       do_stop
+       do_start
         ;;
    *)
         echo "Usage: $NAME {start|stop|restart}" >&2
