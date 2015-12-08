@@ -16,11 +16,12 @@ class SimpleAdapter
 
   def mysql_connect
 
+    #puts $config["client"].inspect
     Timeout::timeout($config["server"]["query_timeout"]) do
     begin
           mysql = Mysql2::Client.new(
           :host => $config["client"]["host"],
-          :port => $config["client"]["host"],
+          :port => $config["client"]["port"],
           :username => $config["client"]["user"],
           :password => $config["client"]["pass"]
         )
@@ -28,7 +29,11 @@ class SimpleAdapter
     rescue => e
       puts e.message
     end 
-    @synced = wsrep_state.first['Value']
+    if wsrep_state.nil?
+      @synced = wsrep_state.first['Value']
+    else
+      @synced = 'none'
+    end
   end
   rescue Timeout::Error
     @synced = 'none'
