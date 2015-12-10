@@ -113,7 +113,7 @@ do_start() {
 
     [ -x $exec ] || exit 5
 
-    if [ -f /var/log/galera-ha.log ]; then
+    if [ ! -f /var/log/galera-ha.log ]; then
         touch /var/log/galera-ha.log
         chown galeraha /var/log/galera-ha.log
     fi
