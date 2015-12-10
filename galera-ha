@@ -29,7 +29,7 @@ class SimpleAdapter
     rescue => e
       puts e.message
     end 
-    if wsrep_state.nil?
+    if ! wsrep_state.nil?
       @synced = wsrep_state.first['Value']
     else
       @synced = 'none'
