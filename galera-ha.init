@@ -13,9 +13,9 @@
 ### END INIT INFO
 
 exec=/usr/local/bin/galera-ha
-pidfile=/var/run/galera-ha.pid
+pidfile=/home/galeraha/galera-ha.pid
 service=galera-ha
-USER=root
+USER=galeraha
 
 test -x $DAEMON || exit 0
 
@@ -112,6 +112,11 @@ do_start() {
     log_daemon_msg "Starting $service"
 
     [ -x $exec ] || exit 5
+
+    if [ -f /var/log/galera-ha.log ]; then
+        touch /var/log/galera-ha.log
+        chown galeraha /var/log/galera-ha.log
+    fi
 
     start_daemon $USER $pidfile $exec "$options"
     retval=$?
