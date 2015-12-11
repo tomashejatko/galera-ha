@@ -22,3 +22,4 @@ make
 make install
 make start
 ```
+But you will propably want to edit /etc/galera-ha.yaml before `make start`, unless you're using monitoring:password credentials to monitor you MySQL machines ;)
