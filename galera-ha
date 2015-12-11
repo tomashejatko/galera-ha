@@ -26,6 +26,7 @@ class SimpleAdapter
           :password => $config["client"]["pass"]
         )
       wsrep_state = mysql.query("SHOW GLOBAL STATUS LIKE 'wsrep_local_state_comment'")
+      mysql.close
     rescue => e
       puts e.message
     end 
