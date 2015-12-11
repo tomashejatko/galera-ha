@@ -13,4 +13,5 @@ server:
   query_timeout : 0.5
   host: 0.0.0.0
   port: 3336
+  daemonize: true
   logfile: '/var/log/galera-ha.log'

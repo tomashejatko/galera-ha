@@ -16,7 +16,6 @@ class SimpleAdapter
 
   def mysql_connect
 
-    #puts $config["client"].inspect
     Timeout::timeout($config["server"]["query_timeout"]) do
     begin
           mysql = Mysql2::Client.new(
@@ -69,5 +68,5 @@ server = Thin::Server.new($config["server"]["host"], $config["server"]["port"]) 
 end
 server.log_file = '/var/log/galera-ha.log'
 server.pid_file = '/home/galeraha/galera-ha.pid'
-server.daemonize
+server.daemonize if $config["server"]["daemonize"]
 server.start
