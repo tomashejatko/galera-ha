@@ -25,4 +25,5 @@ gem install --no-ri --no-rdoc bundler
 useradd -m --system -s /bin/bash galeraha
 bundle install
 /etc/init.d/galera-ha start
+update-rc.d  galera-ha defaults
 ```
