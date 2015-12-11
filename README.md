@@ -15,15 +15,10 @@ Now we can setup HAProxy to make Layer 7 (HTTP) check on Galera nodes, so haprox
   server node3 192.168.110.8:3306  backup check port 3336 inter 15s fastinter 2s downinter 1s rise 5 fall 3
 ```
 
-Temporary install snippet :
+You can install it with Makefile :
 
 ```
-cp galera-ha.yaml /etc/
-cp galera-ha.init /etc/init.d/galera-ha
-cp galera-ha /usr/local/bin
-gem install --no-ri --no-rdoc bundler
-useradd -m --system -s /bin/bash galeraha
-bundle install
-/etc/init.d/galera-ha start
-update-rc.d  galera-ha defaults
+make
+make install
+make start
 ```
