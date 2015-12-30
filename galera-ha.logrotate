@@ -1,0 +1,8 @@
+/var/log/galera-ha.log {
+    daily
+    missingok
+    rotate 10
+    compress
+    notifempty
+    copytruncate
+}

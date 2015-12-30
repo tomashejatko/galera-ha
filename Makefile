@@ -3,6 +3,7 @@ default:
 
 install:
 	/usr/bin/install -o root -g root -m 755 galera-ha.init /etc/init.d/galera-ha
+	/usr/bin/install -o root -g root -m 644 galera-ha.logrotate /etc/logrotate/galera-ha
 	/usr/bin/install -o root -g root -m 755 galera-ha /usr/local/bin
 	/usr/bin/install -o galeraha -g root -m 644 galera-ha.yaml /etc/
 	/usr/bin/gem install --no-ri --no-rdoc bundler
