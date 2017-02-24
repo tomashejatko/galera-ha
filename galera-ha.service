@@ -1,0 +1,19 @@
+[Unit]
+Description=Small Thin server monitoring Galera cluster members state - useful for HAProxy HTTP check
+After=network.target
+
+[Service]
+
+PIDFile=/run/galeraha.pid
+User=galeraha
+PermissionsStartOnly=true
+WorkingDirectory=/home/galeraha
+ExecStart=/usr/local/bin/galera-ha
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
