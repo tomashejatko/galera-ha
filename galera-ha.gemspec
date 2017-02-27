@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = 'galera-ha'
-  s.version               = '0.2'
+  s.version               = '0.3'
   s.date                  = Time.now.strftime('%Y-%m-%d')
   s.summary               = 'Galera readiness check'
   s.description           = 'Small Thin server monitoring Galera cluster members state - useful for HAProxy HTTP check'

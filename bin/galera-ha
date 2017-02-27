@@ -67,6 +67,6 @@ server = Thin::Server.new($config["server"]["host"], $config["server"]["port"]) 
   end
 end
 server.log_file = '/var/log/galera-ha.log'
-server.pid_file = '/run/galera-ha.pid'
+server.pid_file = '/run/galera-ha/app-pid'
 server.daemonize if $config["server"]["daemonize"]
 server.start

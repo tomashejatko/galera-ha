@@ -4,13 +4,13 @@ After=network.target
 
 [Service]
 
-PIDFile=/run/galeraha.pid
+PIDFile=/run/galera-ha/pid
 User=galeraha
 PermissionsStartOnly=true
 WorkingDirectory=/home/galeraha
-ExecStartPre=-/bin/touch /run/galera-ha.pid
-ExecStartPre=-/bin/mkdir /var/log/galera-ha.log
-ExecStartPre=-/bin/chown galeraha /run/galera-ha.pid
+ExecStartPre=-/bin/mkdir /run/galera-ha
+ExecStartPre=-/bin/touch /var/log/galera-ha.log
+ExecStartPre=-/bin/chown galeraha /run/galera-ha/
 ExecStartPre=-/bin/chown galeraha /var/log/galera-ha.log
 ExecStart=/usr/local/bin/galera-ha
 ExecReload=/bin/kill -s HUP $MAINPID
